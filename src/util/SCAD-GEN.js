@@ -42,6 +42,9 @@ rDrive = (3.1 + holeClearance) / 2;
 hInset = 1.6; // I measure ~1.4, but erring high to ensure we ride on the flats, not the inset.
 rInset = 50.9 / 2;
 hGroove = 1.6; // I measure ~1.3, but we want to err high so the tone arm doesn't jump as the gears rotate.
+trackSpacing = (55.9 - 28.15) / 10;  // It's not exactly linear, but close enough if the tone arm offset is small.
+wGroove = .6; // I measure about .8, but elephant's foot on the bottom can expaind it so much the tone arm won't fit.
+wTrack = trackSpacing - wGroove;
 overlap = 0.2;
 
 hasSecondSide = 1;
@@ -55,11 +58,13 @@ hasSecondSide = 1;
 
 // Tone arm geometry, so that chords are staggered appropriately to not sound arpeggiated.
 toneArmPivotPosition = [96, 71];
-toneArmLength = 113.5;
+// Tweak this to account for the slop in the tone arm pivot, such that chords sound good.
+toneArmLengthFudge = 3;
+toneArmLength = 113.5 + toneArmLengthFudge;
 toneArmTrackSpacing = 27.8 / 20;
 toneArmNumTracks = 22;
-// The above was measured, and then this is fudged until the pins line up with the grooves.
-toneArmAngle = 237.6;
+// The above is measured, and then this is fudged until the pins line up with the grooves.
+toneArmAngle = 237.5;
 
 // Create disc
 module createDisc() {
@@ -104,31 +109,9 @@ module createBlank() {
 				translate([0, 0]) square([rCenterHole, hStock]);
 
 				// Tracks - each one for two notes
-				track(28.15, 0);
-				track(30.89, 0);
-				track(33.71, 0);
-				track(36.425, 0);
-				track(39.225, 0);
-				track(42, 0);
-				track(44.825, 0);
-				track(47.555, 0);
-				track(50.315, 0);
-				track(53.11, 0);
-				track(55.9, 0);
-
-				if (hasSecondSide > 0) {
-					track(28.15, 1);
-					track(30.89, 1);
-					track(33.71, 1);
-					track(36.425, 1);
-					track(39.225, 1);
-					track(42, 1);
-					track(44.825, 1);
-					track(47.555, 1);
-					track(50.315, 1);
-					track(53.11, 1);
-					track(55.9, 1);
-				}
+				for (s = [0, hasSecondSide])
+				for (t = [0 : 10])
+				track(28.15 + t * trackSpacing, s);
 			}
 		}	
 
@@ -143,19 +126,13 @@ module createBlank() {
 // Negative for a double track (2d, to be rotate_extruded)
 module track(inner, onSecondSide) {
 	if (onSecondSide > 0) {
-		translate(v = [0,-overlap]) {
-			difference() {
-				square(size=[inner+2, hGroove+overlap]);
-				square(size=[inner,hGroove+overlap]);
-			}
+		translate(v = [inner,-overlap]) {
+			square(size=[wTrack, hGroove+overlap]);
 		}
 	}
 	else {
-		translate(v = [0,hStock-hGroove]) {
-			difference() {
-				square(size=[inner+2, hGroove+overlap]);
-				square(size=[inner, hGroove+overlap]);
-			}
+		translate(v = [inner,hStock-hGroove]) {
+			square(size=[wTrack, hGroove+overlap]);
 		}
 	}
 }
