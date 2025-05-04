@@ -153,12 +153,14 @@ module track(inner, onSecondSide) {
 // Create a pin at a certain angle
 module pin(inner, outer, angle, onSecondSide)
 {
-	rotate(a=angle) {
-		if (onSecondSide > 0) {
+	if (onSecondSide > 0) {
+		rotate(a=angle) {
 			translate(v=[inner, -0.5, - overlap]) {
 				# cube (size=[outer-inner, .8 ,hGroove + overlap], center=false);
 			}
-		} else {
+		}
+	} else {
+		rotate(a=-angle) {
 			translate(v=[inner, -0.5, hStock - hGroove - overlap]) {
 				# cube (size=[outer-inner, .8 ,hGroove + overlap], center=false);
 			}
