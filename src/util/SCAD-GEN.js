@@ -32,14 +32,16 @@ export const scadGen = (notes) => {
 // Configuration
 
 $fn = 360;
-hStock = 5;
-rStock = 60.58;
-rCenterHole = 3.22;
+holeClearance = 0.4;
+
+hStock = 4.6;
+rStock = 121.1 / 2;
+rCenterHole = (6.55 + holeClearance) / 2;
 oDrive = 21.8;
-rDrive = 1.55;
-hInset = 1;
-rInset = 25.6;
-hGroove = 1.2;
+rDrive = (3.1 + holeClearance) / 2;
+hInset = 1.6; // I measure ~1.4, but erring high to ensure we ride on the flats, not the inset.
+rInset = 50.9 / 2;
+hGroove = 1.6; // I measure ~1.3, but we want to err high so the tone arm doesn't jump as the gears rotate.
 overlap = 0.2;
 
 hasSecondSide = 1;
