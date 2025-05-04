@@ -82,7 +82,7 @@ module createBlank() {
 		cylinder(h=hStock, r=rStock);
 	
 		// top cutout
-		translate(v = [0,0,hStock-hInset+overlap]) {
+		translate(v = [0,0,hStock-hInset-overlap]) {
 			cylinder(h=hInset + overlap, r=rInset);
 		}
 
@@ -155,7 +155,7 @@ module pin(inner, outer, angle, onSecondSide)
 {
 	if (onSecondSide > 0) {
 		rotate(a=angle) {
-			translate(v=[inner, -0.5, - overlap]) {
+			translate(v=[inner, -0.5, 0]) {
 				# cube (size=[outer-inner, .8 ,hGroove + overlap], center=false);
 			}
 		}
