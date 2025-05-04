@@ -50,6 +50,14 @@ hasSecondSide = 1;
 // If you have trouble, download https://github.com/rohieb/Write.scad and copy all the files to the same directory as this SCAD file
 // include <write.scad>
 
+// Tone arm geometry, so that chords are staggered appropriately to not sound arpeggiated.
+toneArmPivotPosition = [96, 71];
+toneArmLength = 113.5;
+toneArmTrackSpacing = 27.8 / 20;
+toneArmNumTracks = 22;
+// The above was measured, and then this is fudged until the pins line up with the grooves.
+toneArmAngle = 237.6;
+
 // Create disc
 module createDisc() {
 	union() {
@@ -153,19 +161,19 @@ module track(inner, onSecondSide) {
 // Create a pin at a certain angle
 module pin(inner, outer, angle, onSecondSide)
 {
-	if (onSecondSide > 0) {
-		rotate(a=angle) {
-			translate(v=[inner, -0.5, 0]) {
-				# cube (size=[outer-inner, .8 ,hGroove + overlap], center=false);
-			}
-		}
-	} else {
-		rotate(a=-angle) {
-			translate(v=[inner, -0.5, hStock - hGroove - overlap]) {
-				# cube (size=[outer-inner, .8 ,hGroove + overlap], center=false);
-			}
-		}
-	}
+	pinWidth = .8;
+
+	// could modify the JS to pass this in
+	trackIndex = floor(toneArmNumTracks * ((inner + outer) / 2 - 27.95) / (58.1 - 27.95));
+
+	translate(onSecondSide * [0, 0, hStock / 2])
+	rotate(onSecondSide * [180, 0, 0])
+	translate(onSecondSide * [0, 0, -hStock / 2])	
+	rotate(angle)
+	translate(toneArmPivotPosition)
+	rotate(toneArmAngle)
+	translate([toneArmLength - pinWidth, (trackIndex - toneArmNumTracks / 2) * toneArmTrackSpacing, hStock - hGroove - overlap])
+	#cube(size = [pinWidth, toneArmTrackSpacing, hGroove + overlap]);
 }
 
 // Add text
