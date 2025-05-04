@@ -31,9 +31,10 @@ export const scadGen = (notes) => {
 
 // Configuration
 
-$fn = 100;
+$fn = 360;
 hStock = 5;
 rStock = 60.58;
+rCenterHole = 3.22;
 oDrive = 21.8;
 rDrive = 1.55;
 hInset = 1;
@@ -86,76 +87,75 @@ module createBlank() {
 
 	difference() {
 	
-		// stock
-		cylinder(h=hStock, r=rStock);
-	
-		// top cutout
-		translate(v = [0,0,hStock-hInset-overlap]) {
-			cylinder(h=hInset + overlap, r=rInset);
-		}
+		rotate_extrude(convexity=12) {
+			difference() {
+				// stock
+				square([rStock, hStock]);
 
-		// Bottom cutout lets the disc sit flatter, but some printers my struggle with the overhang
-		translate(v = [0,0,-overlap]) {
-			cylinder(h=hInset + overlap, r=rInset);
-		}
-		
-		// Centre hole
-		cylinder(h=hStock, r=3.22);
+				// top cutout
+				translate([0, hStock - hInset]) square([rInset, hInset + overlap]);
+
+				// Bottom cutout lets the disc sit flatter, but some printers my struggle with the overhang
+				translate([0, -overlap]) square([rInset, hInset + overlap]);
+
+				// Centre hole		
+				translate([0, 0]) square([rCenterHole, hStock]);
+
+				// Tracks - each one for two notes
+				track(28.15, 0);
+				track(30.89, 0);
+				track(33.71, 0);
+				track(36.425, 0);
+				track(39.225, 0);
+				track(42, 0);
+				track(44.825, 0);
+				track(47.555, 0);
+				track(50.315, 0);
+				track(53.11, 0);
+				track(55.9, 0);
+
+				if (hasSecondSide > 0) {
+					track(28.15, 1);
+					track(30.89, 1);
+					track(33.71, 1);
+					track(36.425, 1);
+					track(39.225, 1);
+					track(42, 1);
+					track(44.825, 1);
+					track(47.555, 1);
+					track(50.315, 1);
+					track(53.11, 1);
+					track(55.9, 1);
+				}
+			}
+		}	
 
 		// Drive holes
 		translate(v = [0,oDrive,0]) { cylinder(h=hStock, r=rDrive); }
 		translate(v = [0,-oDrive,0]) { cylinder(h=hStock, r=rDrive); }
 		translate(v = [oDrive,0,0]) { cylinder(h=hStock, r=rDrive); }
-		translate(v = [-oDrive,0,0]) { cylinder(h=hStock, r=rDrive); }
-
-		// Tracks - each one for two notes
-		track(28.15, 0);
-		track(30.89, 0);
-		track(33.71, 0);
-		track(36.425, 0);
-		track(39.225, 0);
-		track(42, 0);
-		track(44.825, 0);
-		track(47.555, 0);
-		track(50.315, 0);
-		track(53.11, 0);
-		track(55.9, 0);
-
-		if (hasSecondSide > 0) {
-			track(28.15, 1);
-			track(30.89, 1);
-			track(33.71, 1);
-			track(36.425, 1);
-			track(39.225, 1);
-			track(42, 1);
-			track(44.825, 1);
-			track(47.555, 1);
-			track(50.315, 1);
-			track(53.11, 1);
-			track(55.9, 1);
-		}
+		translate(v = [-oDrive,0,0]) { cylinder(h=hStock, r=rDrive); }		
 	}
 }
 
-// Negative for a double track
+// Negative for a double track (2d, to be rotate_extruded)
 module track(inner, onSecondSide) {
 	if (onSecondSide > 0) {
-		translate(v = [0,0,-overlap]) {
+		translate(v = [0,-overlap]) {
 			difference() {
-				cylinder(h=hGroove+overlap, r=inner+2);
-				cylinder(h=hGroove+overlap, r=inner);
+				square(size=[inner+2, hGroove+overlap]);
+				square(size=[inner,hGroove+overlap]);
 			}
 		}
 	}
 	else {
-		translate(v = [0,0,hStock-hGroove]) {
+		translate(v = [0,hStock-hGroove]) {
 			difference() {
-				cylinder(h=hGroove+overlap, r=inner+2);
-				cylinder(h=hGroove+overlap, r=inner);
+				square(size=[inner+2, hGroove+overlap]);
+				square(size=[inner, hGroove+overlap]);
 			}
 		}
 	}
-
 }
 
 // Create a pin at a certain angle
