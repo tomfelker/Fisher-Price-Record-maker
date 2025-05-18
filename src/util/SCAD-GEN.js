@@ -1,4 +1,4 @@
-import { notePinKey } from "./noteKey";
+import { noteIndexToPinIndices } from "./noteKey";
 
 export const scadGen = (notes) => {
     const generatePins = (pins, side) => {
@@ -7,12 +7,19 @@ export const scadGen = (notes) => {
         //get the spacing needed to evenly space all notes around the circle
         const space = 360 / totalBeats;
         let output = ``;
+		let pinToCount = [];
 
         for (let i = 0; i < 16; i++) {
             for (let j = 0; j < totalBeats; j++) {
                 if (pins[i][j]) {
+					if (pinToCount[i] === undefined) {
+						pinToCount[i] = 0;
+					}
+					const pinIndices = noteIndexToPinIndices[i];
+					const pinIndex = pinIndices[pinToCount[i] % pinIndices.length];
+					pinToCount[i]++;
                     output += `
-				pin(${notePinKey[i]},${space * j},${side});`;
+				pin(${pinIndex},${space * j},${side});`;
                 }
             }
         }
@@ -45,6 +52,7 @@ hGroove = 1.6; // I measure ~1.3, but we want to err high so the tone arm doesn'
 trackSpacing = (55.9 - 28.15) / 10;  // It's not exactly linear, but close enough if the tone arm offset is small.
 wGroove = .6; // I measure about .8, but elephant's foot on the bottom can expaind it so much the tone arm won't fit.
 wTrack = trackSpacing - wGroove;
+pinWidth = .8;
 overlap = 0.2;
 
 hasSecondSide = 1;
@@ -138,13 +146,8 @@ module track(inner, onSecondSide) {
 }
 
 // Create a pin at a certain angle
-module pin(inner, outer, angle, onSecondSide)
+module pin(trackIndex, angle, onSecondSide)
 {
-	pinWidth = .8;
-
-	// could modify the JS to pass this in
-	trackIndex = floor(toneArmNumTracks * ((inner + outer) / 2 - 27.95) / (58.1 - 27.95));
-
 	translate(onSecondSide * [0, 0, hStock / 2])
 	rotate(onSecondSide * [180, 0, 0])
 	translate(onSecondSide * [0, 0, -hStock / 2])	
