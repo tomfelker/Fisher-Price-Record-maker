@@ -1,25 +1,45 @@
-import { noteIndexToPinIndices } from "./noteKey";
+import { noteIndexToPinIndices, noteName } from "./noteKey";
 
 export const scadGen = (notes) => {
     const generatePins = (pins, side) => {
+		//if pins are spaced along the circumference of the track more closely than this,
+		//the gear will not engage properly and the tone arm will jump.
+		const minPinSpacing = 5;
+		
         //get the total number opf beats, every array index should be the same length
         const totalBeats = pins[0].length;
         //get the spacing needed to evenly space all notes around the circle
         const space = 360 / totalBeats;
         let output = ``;
-		let pinToCount = [];
-
-        for (let i = 0; i < 16; i++) {
-            for (let j = 0; j < totalBeats; j++) {
-                if (pins[i][j]) {
-					if (pinToCount[i] === undefined) {
-						pinToCount[i] = 0;
+		let noteToCount = [];
+		let pinToLastAngle = [];
+		
+        for (let beatIndex = 0; beatIndex < totalBeats; beatIndex++) {
+			for (let noteIndex = 0; noteIndex < 16; noteIndex++) {
+                if (pins[noteIndex][beatIndex]) {
+					if (noteToCount[noteIndex] === undefined) {
+						noteToCount[noteIndex] = 0;
 					}
-					const pinIndices = noteIndexToPinIndices[i];
-					const pinIndex = pinIndices[pinToCount[i] % pinIndices.length];
-					pinToCount[i]++;
+					const pinIndices = noteIndexToPinIndices[noteIndex];
+					const pinIndex = pinIndices[noteToCount[noteIndex] % pinIndices.length];
+					const pinAngle = space * beatIndex;
+					const pinRadius = 28.55 + pinIndex * 27.8 / 20;
+					const pinCircumference = 2 * Math.PI * pinRadius;
+					const circumferenceToLastPin = (pinAngle - (pinToLastAngle[pinIndex] || -360)) / 360 * pinCircumference;
+					const badSpacing = circumferenceToLastPin < minPinSpacing;
+					if (badSpacing) {
+						const noteIndex = noteIndexToPinIndices.findIndex(pins => pins.includes(pinIndex));
+						const friendlyNoteName = noteName[noteIndex];
+						output += `
+				echo("Pin on side ${side} beat ${beatIndex} note ${friendlyNoteName} is too close to the last pin. Distance is ${circumferenceToLastPin} but we want at least ${minPinSpacing}");`;
+					}
+
+					noteToCount[noteIndex]++;
+					if (!badSpacing) {
+						pinToLastAngle[pinIndex] = pinAngle;
+					}
                     output += `
-				pin(${pinIndex},${space * j},${side});`;
+				pin(${pinIndex},${pinAngle},${side},${badSpacing});`;					
                 }
             }
         }
@@ -67,7 +87,7 @@ hasSecondSide = 1;
 // Tone arm geometry, so that chords are staggered appropriately to not sound arpeggiated.
 toneArmPivotPosition = [96, 71];
 // Tweak this to account for the slop in the tone arm pivot, such that chords sound good.
-toneArmLengthFudge = 3;
+toneArmLengthFudge = 2;
 toneArmLength = 113.5 + toneArmLengthFudge;
 toneArmTrackSpacing = 27.8 / 20;
 toneArmNumTracks = 22;
@@ -146,7 +166,7 @@ module track(inner, onSecondSide) {
 }
 
 // Create a pin at a certain angle
-module pin(trackIndex, angle, onSecondSide)
+module pin(trackIndex, angle, onSecondSide, badSpacing)
 {
 	translate(onSecondSide * [0, 0, hStock / 2])
 	rotate(onSecondSide * [180, 0, 0])
@@ -155,7 +175,8 @@ module pin(trackIndex, angle, onSecondSide)
 	translate(toneArmPivotPosition)
 	rotate(toneArmAngle)
 	translate([toneArmLength - pinWidth, (trackIndex - toneArmNumTracks / 2) * toneArmTrackSpacing, hStock - hGroove - overlap])
-	#cube(size = [pinWidth, toneArmTrackSpacing, hGroove + overlap]);
+	color(badSpacing ? "red" : "green")
+	cube(size = [pinWidth, toneArmTrackSpacing, hGroove * (badSpacing ? .1 : 1) + overlap]);
 }
 
 // Add text
